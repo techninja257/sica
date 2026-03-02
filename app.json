@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "sica",
+    "name": "Sica",
     "slug": "sica",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -12,15 +12,22 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.victoranderson.sica"
     },
     "android": {
+      "package": "com.victoranderson.sica",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "permissions": [
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE",
+        "android.permission.POST_NOTIFICATIONS"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -29,7 +36,19 @@
       "expo-secure-store",
       "@react-native-community/datetimepicker",
       "expo-font",
-      "expo-localization"
-    ]
+      "expo-localization",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/android-icon-foreground.png",
+          "color": "#7B61FF"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "b9685d6d-147f-4217-913c-623808607670"
+      }
+    }
   }
 }

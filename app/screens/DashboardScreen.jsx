@@ -125,11 +125,9 @@ export default function DashboardScreen() {
   const streak = calculateStreak(logs, goal);
 
   const STAGE_NAMES = [
-    'Desert Mist',
-    'Mountain Spring',
-    'River Guide',
-    'Tide Shifter',
-    'Deep Blue',
+    'Desert Mist', 'Morning Dew', 'Pebble Creek', 'Forest Spring', 'Canyon Stream',
+    'River Walker', 'Glacial Melt', 'Storm Basin', 'Tidal Force', 'Arctic Current',
+    'Abyssal Depths', 'Tempest Born', 'Glacier Sovereign', 'Tsunami Rider',
     profile?.gender === 'goddess' ? 'Ocean Goddess' : 'Ocean God',
   ];
   const stageName = STAGE_NAMES[journey?.currentStage ?? 0];

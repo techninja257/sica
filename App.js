@@ -1,6 +1,6 @@
 import 'react-native-get-random-values';
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
@@ -57,7 +57,7 @@ export default function App() {
     init();
   }, []);
 
-  // Identify user + track app_opened once userId and profile are ready
+  // Identify user + track app_opened once userId is ready
   useEffect(() => {
     if (!userId) return;
     identifyUser(userId, {
@@ -66,7 +66,7 @@ export default function App() {
       gender: profile?.gender,
       notification_interval_hours: profile?.notificationIntervalHours,
       weather_nudges_enabled: profile?.weatherAdjustEnabled,
-      platform: require('react-native').Platform.OS,
+      platform: Platform.OS,
     });
     trackAppOpened();
   }, [userId]);
@@ -112,7 +112,6 @@ export default function App() {
     setOnboardingDone(true);
   };
 
-  // All early returns AFTER all hooks
   if (!fontsLoaded) return <View style={styles.loading} />;
 
   if (showSplash) {

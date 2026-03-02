@@ -47,21 +47,32 @@ function WaterIllustration() {
   );
 }
 
-function HourWheel({ value, onChange }) {
+function HourWheel({ value, onChange, onTouchStart, onTouchEnd }) {
   const ITEM_HEIGHT = 44;
   return (
-    <View style={wStyles.wheelMask}>
+    <View
+      style={wStyles.wheelMask}
+      onStartShouldSetResponder={() => true}
+    >
       <View style={wStyles.wheelHighlight} pointerEvents="none" />
       <ScrollView
         style={wStyles.wheelScroll}
         showsVerticalScrollIndicator={false}
         snapToInterval={ITEM_HEIGHT}
         decelerationRate="fast"
+        nestedScrollEnabled={true}
         contentOffset={{ y: value * ITEM_HEIGHT }}
+        onScrollBeginDrag={onTouchStart}
         onMomentumScrollEnd={(e) => {
           const h = Math.min(Math.max(Math.round(e.nativeEvent.contentOffset.y / ITEM_HEIGHT), 0), 23);
           onChange(h);
+          onTouchEnd && onTouchEnd();
           Haptics.selectionAsync();
+        }}
+        onScrollEndDrag={(e) => {
+          const h = Math.min(Math.max(Math.round(e.nativeEvent.contentOffset.y / ITEM_HEIGHT), 0), 23);
+          onChange(h);
+          onTouchEnd && onTouchEnd();
         }}
         scrollEventThrottle={16}
         contentContainerStyle={{ paddingVertical: ITEM_HEIGHT * 2 }}
@@ -119,6 +130,7 @@ export default function OnboardingScreen({ onComplete }) {
   const [weatherEnabled, setWeatherEnabled] = useState(true);
   const [city, setCity] = useState('');
 
+  const [parentScrollEnabled, setParentScrollEnabled] = useState(true);
   const slideAnim = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(1 / TOTAL_STEPS)).current;
 
@@ -411,7 +423,7 @@ export default function OnboardingScreen({ onComplete }) {
 
           {/* ── STEP 4 — Goal + Window ── */}
           {step === 3 && (
-            <ScrollView contentContainerStyle={s.stepScroll} keyboardShouldPersistTaps="handled">
+            <ScrollView contentContainerStyle={s.stepScroll} keyboardShouldPersistTaps="handled" scrollEnabled={parentScrollEnabled}>
               <Text style={s.titleCenter}>Hydration Goal</Text>
               <Text style={s.subtitleCenter}>
                 Based on your profile, Sica recommends{' '}
@@ -455,17 +467,53 @@ export default function OnboardingScreen({ onComplete }) {
               {/* Window card */}
               <View style={s.card}>
                 <Text style={s.windowTitle}>DRINKING WINDOW</Text>
-                <View style={s.windowRow}>
-                  <View style={s.windowCol}>
-                    <Text style={s.windowColLabel}>Start Time</Text>
-                    <HourWheel value={windowStart} onChange={setWindowStart} />
-                  </View>
-                  <View style={s.windowDivider} />
-                  <View style={s.windowCol}>
-                    <Text style={s.windowColLabel}>End Time</Text>
-                    <HourWheel value={windowEnd} onChange={setWindowEnd} />
+
+                {/* Start Time row */}
+                <View style={s.timeRow}>
+                  <Text style={s.timeRowLabel}>Start Time</Text>
+                  <View style={s.timeRowControls}>
+                    <TouchableOpacity
+                      style={s.timeStepperBtn}
+                      onPress={() => { setWindowStart(Math.max(0, windowStart - 1)); Haptics.selectionAsync(); }}
+                      onLongPress={() => setWindowStart(Math.max(0, windowStart - 2))}
+                    >
+                      <Text style={s.timeStepperBtnText}>−</Text>
+                    </TouchableOpacity>
+                    <Text style={s.timeStepperValue}>{formatHour(windowStart)}</Text>
+                    <TouchableOpacity
+                      style={s.timeStepperBtn}
+                      onPress={() => { setWindowStart(Math.min(windowEnd - 1, windowStart + 1)); Haptics.selectionAsync(); }}
+                      onLongPress={() => setWindowStart(Math.min(windowEnd - 1, windowStart + 2))}
+                    >
+                      <Text style={s.timeStepperBtnText}>+</Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
+
+                <View style={s.timeRowDivider} />
+
+                {/* End Time row */}
+                <View style={s.timeRow}>
+                  <Text style={s.timeRowLabel}>End Time</Text>
+                  <View style={s.timeRowControls}>
+                    <TouchableOpacity
+                      style={s.timeStepperBtn}
+                      onPress={() => { setWindowEnd(Math.max(windowStart + 1, windowEnd - 1)); Haptics.selectionAsync(); }}
+                      onLongPress={() => setWindowEnd(Math.max(windowStart + 1, windowEnd - 2))}
+                    >
+                      <Text style={s.timeStepperBtnText}>−</Text>
+                    </TouchableOpacity>
+                    <Text style={s.timeStepperValue}>{formatHour(windowEnd)}</Text>
+                    <TouchableOpacity
+                      style={s.timeStepperBtn}
+                      onPress={() => { setWindowEnd(Math.min(23, windowEnd + 1)); Haptics.selectionAsync(); }}
+                      onLongPress={() => setWindowEnd(Math.min(23, windowEnd + 2))}
+                    >
+                      <Text style={s.timeStepperBtnText}>+</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
               </View>
             </ScrollView>
           )}
@@ -759,11 +807,11 @@ const s = StyleSheet.create({
   goalBtnText: { fontSize: 26, color: '#7B61FF', fontWeight: '300', lineHeight: 30 },
   goalCenter: { flexDirection: 'row', alignItems: 'baseline' },
   goalInput: {
-    fontSize: 64, fontWeight: '800', color: '#7B61FF',
+    fontSize: 64, fontWeight: '800', color: '#1A1A2E',
     minWidth: 120, letterSpacing: -2,
     fontFamily: 'Manrope_800ExtraBold',
   },
-  goalUnit: { fontSize: 20, fontWeight: '700', color: 'rgba(123,97,255,0.6)', marginLeft: 4 },
+  goalUnit: { fontSize: 20, fontWeight: '700', color: 'rgba(26,26,46,0.4)', marginLeft: 4 },
   goalSubLabel: {
     fontSize: 10, fontWeight: '700', color: 'rgba(26,26,46,0.35)',
     letterSpacing: 3, textAlign: 'center',
@@ -781,7 +829,31 @@ const s = StyleSheet.create({
     marginBottom: 8, letterSpacing: 1,
     fontFamily: 'Manrope_700Bold',
   },
-  windowDivider: { width: 1, backgroundColor: 'rgba(26,26,46,0.08)', height: 220, marginTop: 28 },
+  timeRow: {
+    flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'space-between', paddingVertical: 8,
+  },
+  timeRowLabel: {
+    fontSize: 14, fontWeight: '600', color: 'rgba(26,26,46,0.5)',
+    fontFamily: 'Manrope_600SemiBold',
+  },
+  timeRowControls: {
+    flexDirection: 'row', alignItems: 'center', gap: 16,
+  },
+  timeRowDivider: {
+    height: 1, backgroundColor: 'rgba(26,26,46,0.07)', marginVertical: 4,
+  },
+  timeStepperBtn: {
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: 'rgba(123,97,255,0.1)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  timeStepperBtnText: { fontSize: 24, color: '#7B61FF', fontWeight: '300', lineHeight: 28 },
+  timeStepperValue: {
+    fontSize: 28, fontWeight: '800', color: '#1A1A2E',
+    letterSpacing: -1, minWidth: 80, textAlign: 'center',
+    fontFamily: 'Manrope_800ExtraBold',
+  },
 
   // Step 5 — Reminders
   sectionLabel: {
